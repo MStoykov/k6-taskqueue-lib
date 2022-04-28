@@ -1,4 +1,5 @@
 ## Introduction
+[![Go Reference](https://pkg.go.dev/badge/github.com/mstoykov/k6-taskqueue-lib.svg)](https://pkg.go.dev/github.com/mstoykov/k6-taskqueue-lib)
 
 This is a small task queuer for k6's event loop. 
 
