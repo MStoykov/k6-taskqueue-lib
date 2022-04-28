@@ -1,8 +1,5 @@
 name: Lint
-on:
-  # Enable manually triggering this workflow via the API or web UI
-  workflow_dispatch:
-  pull_request:
+on: push
 
 defaults:
   run:
@@ -46,4 +43,3 @@ jobs:
         with:
           # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
           version: ${{ steps.version.outputs.Version }}
-          only-new-issues: true
