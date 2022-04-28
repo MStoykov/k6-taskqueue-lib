@@ -13,9 +13,8 @@ type TaskQueue struct {
 	callback         func(Task)
 	registerCallback func() func(Task)
 	queue            []Task // TODO use a ring?
-	closed           bool
-	closing          bool
 	m                sync.Mutex
+	closed           bool
 }
 
 // Task is just a representation of a task that will be added to the event loop
@@ -57,7 +56,8 @@ func (tq *TaskQueue) Close() {
 	tq.callback(func() error { return nil })
 }
 
-// Queue the provided function for execution. If used after Close is called it will not actually execute anything or return an error
+// Queue the provided function for execution.
+// If used after Close is called it will not actually execute anything or return an error
 func (tq *TaskQueue) Queue(t Task) {
 	tq.m.Lock()
 	defer tq.m.Unlock()

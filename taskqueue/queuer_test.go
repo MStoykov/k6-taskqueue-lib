@@ -72,7 +72,7 @@ func TestTwoTaskQueues(t *testing.T) {
 	require.NoError(t, rt.Set("a", func() {
 		for s := 0; s < 5; s++ { // make multiple goroutines
 			go func() {
-				for i := 0; i < 1000000; i++ {
+				for p := 0; p < 1000000; p++ {
 					fq.Queue(func() error { // queue a task to increment integers
 						incrimentI()
 						incrimentJ()
@@ -87,7 +87,7 @@ func TestTwoTaskQueues(t *testing.T) {
 				}
 			}()
 			go func() { // same as above but with the other queue
-				for i := 0; i < 1000000; i++ {
+				for p := 0; p < 1000000; p++ {
 					fq2.Queue(func() error {
 						incrimentI()
 						incrimentK()
