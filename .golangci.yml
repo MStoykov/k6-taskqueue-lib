@@ -1,7 +1,7 @@
-# v1.43.0
+# v1.60.1
 # Please don't remove the first line. It uses in CI to determine the golangci version
 run:
-  deadline: 5m
+  timeout: 5m
 
 issues:
   # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
@@ -10,33 +10,15 @@ issues:
   max-same-issues: 0
 
   # We want to try and improve the comments in the k6 codebase, so individual
-  # non-golint items from the default exclusion list will gradually be addded
+  # non-golint items from the default exclusion list will gradually be added
   # to the exclude-rules below
   exclude-use-default: false
-
-  exclude-rules:
-   # Exclude duplicate code and function length and complexity checking in test
-   # files (due to common repeats and long functions in test code)
-   - path: _(test|gen)\.go
-     linters:
-       - cyclop
-       - dupl
-       - gocognit
-       - funlen
-       - lll
-   - linters:
-     - paralleltest # false positive: https://github.com/kunwardeep/paralleltest/issues/8.
-     text: "does not use range value in test Run"
 
 linters-settings:
   exhaustive:
     default-signifies-exhaustive: true
-  govet:
-    check-shadowing: true
   cyclop:
     max-complexity: 25
-  maligned:
-    suggest-new: true
   dupl:
     threshold: 150
   goconst:
@@ -45,37 +27,81 @@ linters-settings:
   funlen:
     lines: 80
     statements: 60
-  goheader:
-    template-path: ".license-template"
-    values:
-      const:
-        year: "2022"
-      regexp:
-        year-range: (\d\d\d\d|{{year}})
+  forbidigo:
+    forbid:
+      - '^(fmt\\.Print(|f|ln)|print|println)$'
+      # Forbid everything in os, except os.Signal and os.SyscalError
+      - '^os\.(.*)$(# Using anything except Signal and SyscallError from the os package is forbidden )?'
+      # Forbid everything in syscall except the uppercase constants
+      - '^syscall\.[^A-Z_]+$(# Using anything except constants from the syscall package is forbidden )?'
+      - '^logrus\.Logger$'
 
 linters:
-  enable-all: true
-  disable:
-  - nlreturn
-  - gci
-  - gochecknoinits
-  - godot
-  - godox
-  - gomodguard
-  - testpackage
-  - wsl
-  - gomnd
-  - goerr113 # most of the errors here are meant for humans
-  - goheader
-  - exhaustivestruct
-  - thelper
-  - gocyclo # replaced by cyclop since it also calculates the package complexity
-  - maligned # replaced by govet 'fieldalignment'
-  - interfacer # deprecated
-  - scopelint # deprecated, replaced by exportloopref
-  - wrapcheck # a little bit too much for k6, maybe after https://github.com/tomarrell/wrapcheck/issues/2 is fixed
-  - golint # this linter is deprecated
-  - varnamelen # disabled before the final decision in (https://github.com/grafana/k6/pull/2323)
-  - ireturn
-  - tagliatelle
+  disable-all: true
+  enable:
+    - asasalint
+    - asciicheck
+    - bidichk
+    - bodyclose
+    - canonicalheader
+    - contextcheck
+    - cyclop
+    - dogsled
+    - dupl
+    - durationcheck
+    - errcheck
+    - errchkjson
+    - errname
+    - errorlint
+    - exhaustive
+    - exportloopref
+    - fatcontext
+    - forbidigo
+    - forcetypeassert
+    - funlen
+    - gocheckcompilerdirectives
+    - gochecknoglobals
+    - gocognit
+    - goconst
+    - gocritic
+    - gofmt
+    - gofumpt
+    - goimports
+    - gomoddirectives
+    - goprintffuncname
+    - gosec
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - interfacebloat
+    - lll
+    - makezero
+    - misspell
+    - nakedret
+    - nestif
+    - nilerr
+    - nilnil
+    - noctx
+    - nolintlint
+    - nosprintfhostport
+    - paralleltest
+    - prealloc
+    - predeclared
+    - promlinter
+    - revive
+    - reassign
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - stylecheck
+    - tenv
+    - tparallel
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - usestdlibvars
+    - wastedassign
+    - whitespace
   fast: false
