@@ -1,21 +1,23 @@
-package taskqueue
+package taskqueue_test
 
 import (
 	"context"
 	"testing"
 	"time"
 
-	"github.com/dop251/goja"
+	"github.com/grafana/sobek"
 	"github.com/stretchr/testify/require"
 	"go.k6.io/k6/js/common"
 	"go.k6.io/k6/js/eventloop"
 	"go.k6.io/k6/js/modulestest"
+
+	"github.com/mstoykov/k6-taskqueue-lib/taskqueue"
 )
 
 func TestTaskQueue(t *testing.T) {
 	// really basic test
 	t.Parallel()
-	rt := goja.New()
+	rt := sobek.New()
 	vu := &modulestest.VU{
 		RuntimeField: rt,
 		InitEnvField: &common.InitEnvironment{},
@@ -23,7 +25,7 @@ func TestTaskQueue(t *testing.T) {
 		StateField:   nil,
 	}
 	loop := eventloop.New(vu)
-	fq := New(loop.RegisterCallback)
+	fq := taskqueue.New(loop.RegisterCallback)
 	var i int
 	require.NoError(t, rt.Set("a", func() {
 		fq.Queue(func() error {
@@ -52,7 +54,7 @@ func TestTaskQueue(t *testing.T) {
 func TestTwoTaskQueues(t *testing.T) {
 	// try to find any kind of races through running multiple queues and having them race with each other
 	t.Parallel()
-	rt := goja.New()
+	rt := sobek.New()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
 	t.Cleanup(cancel)
 	vu := &modulestest.VU{
@@ -60,8 +62,8 @@ func TestTwoTaskQueues(t *testing.T) {
 		CtxField:     ctx,
 	}
 	loop := eventloop.New(vu)
-	fq := New(loop.RegisterCallback)
-	fq2 := New(loop.RegisterCallback)
+	fq := taskqueue.New(loop.RegisterCallback)
+	fq2 := taskqueue.New(loop.RegisterCallback)
 	var i int
 	incrimentI := func() { i++ }
 	var j int
