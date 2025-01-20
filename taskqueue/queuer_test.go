@@ -5,10 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/grafana/sobek"
 	"github.com/stretchr/testify/require"
-	"go.k6.io/k6/js/common"
-	"go.k6.io/k6/js/eventloop"
 	"go.k6.io/k6/js/modulestest"
 
 	"github.com/mstoykov/k6-taskqueue-lib/taskqueue"
@@ -17,17 +14,10 @@ import (
 func TestTaskQueue(t *testing.T) {
 	// really basic test
 	t.Parallel()
-	rt := sobek.New()
-	vu := &modulestest.VU{
-		RuntimeField: rt,
-		InitEnvField: &common.InitEnvironment{},
-		CtxField:     context.Background(),
-		StateField:   nil,
-	}
-	loop := eventloop.New(vu)
-	fq := taskqueue.New(loop.RegisterCallback)
+	tr := modulestest.NewRuntime(t)
+	fq := taskqueue.New(tr.EventLoop.RegisterCallback)
 	var i int
-	require.NoError(t, rt.Set("a", func() {
+	require.NoError(t, tr.VU.Runtime().Set("a", func() {
 		fq.Queue(func() error {
 			fq.Queue(func() error {
 				fq.Queue(func() error {
@@ -43,8 +33,8 @@ func TestTaskQueue(t *testing.T) {
 		})
 	}))
 
-	err := loop.Start(func() error {
-		_, err := vu.Runtime().RunString(`a()`)
+	err := tr.EventLoop.Start(func() error {
+		_, err := tr.VU.Runtime().RunString(`a()`)
 		return err
 	})
 	require.NoError(t, err)
@@ -54,16 +44,14 @@ func TestTaskQueue(t *testing.T) {
 func TestTwoTaskQueues(t *testing.T) {
 	// try to find any kind of races through running multiple queues and having them race with each other
 	t.Parallel()
-	rt := sobek.New()
-	ctx, cancel := context.WithTimeout(context.Background(), time.Millisecond*100)
+	tr := modulestest.NewRuntime(t)
+	ctx, cancel := context.WithTimeout(tr.VU.Context(), time.Millisecond*100)
 	t.Cleanup(cancel)
-	vu := &modulestest.VU{
-		RuntimeField: rt,
-		CtxField:     ctx,
-	}
-	loop := eventloop.New(vu)
-	fq := taskqueue.New(loop.RegisterCallback)
-	fq2 := taskqueue.New(loop.RegisterCallback)
+	tr.VU.CtxField = ctx
+
+	rt := tr.VU.Runtime()
+	fq := taskqueue.New(tr.EventLoop.RegisterCallback)
+	fq2 := taskqueue.New(tr.EventLoop.RegisterCallback)
 	var i int
 	incrimentI := func() { i++ }
 	var j int
@@ -112,12 +100,12 @@ func TestTwoTaskQueues(t *testing.T) {
 		fq2.Close()
 	}()
 
-	err := loop.Start(func() error {
-		_, err := vu.Runtime().RunString(`a()`)
+	err := tr.EventLoop.Start(func() error {
+		_, err := tr.VU.Runtime().RunString(`a()`)
 		return err
 	})
 	require.NoError(t, err)
-	loop.WaitOnRegistered()
+	tr.EventLoop.WaitOnRegistered()
 	require.Equal(t, i, k+j)
 	require.Greater(t, k, 100)
 	require.Greater(t, j, 100)
